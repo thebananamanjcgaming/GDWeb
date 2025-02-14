@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+    <script>
+      function gameStart() {
+	console.log("Loading assets from https://relay.tbmjcg.net/assets/GDWeb/...")
+	console.log("Finished!")
+	console.warn("May have errors! Always remember to email me in case of any errors!!")
+	console.error("Error with JavaScript display: 'Scripts musn't have their display tag set to block, as it WILL cause some minor issues on phone/tablet.")
+      } gameStart()
+    </script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Geometry Dash</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000000;
+	    overflow: hidden; /* Prevents both vertical and horizontal scrolling */
+  	    /* OR */
+	    overflow-y: hidden; /* Prevents vertical scrolling only */
+ 	    /* OR */
+	    overflow-x: hidden; /* Prevents horizontal scrolling only */
+        }
+        canvas {
+            border: 1px solid black;
+	    background-color: #ADD8E6;
+        }
+	@font-face {
+        font-family: 'GD'; 
+        src: url('OXYGENE1.TTF') format('truetype'); 
+        }
+	h1 {
+	font-family: 'GD';
+	color: #00FF00
+	top: 100%;
+	}
+	h2 {
+	font-family: 'GD';
+	color: #00FF00
+	top: 100%;
+	}
+	p {
+	font-family: 'GD';
+	color: #00FF00
+	top: 100%;
+	}
+	button {
+	font-family: 'GD';
+	background-color: #00FF00;
+	}
+	#restartButton {
+	font-family: 'GD';
+	background-color: #00FF00;
+	}
+	#splash-screen {
+        position: fixed; /* Cover the entire screen */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: #006400; /* Or any color/image you want */
+        display: flex;
+        justify-content: center; /* Center horizontally */
+        align-items: center;     /* Center vertically */
+        z-index: 9999; /* Ensure it's on top of everything */
+        /* Add any other styling you want for the splash screen content */
+        }
+
+        #splash-content {
+            /* Style the content within the splash screen */
+            text-align: center; /* Example */
+        }
+        /* Hide the rest of the content initially */
+        body > *:not(#splash-screen) { /* Select all children of body except #splash-screen */
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="splash-screen">
+        <div id="splash-content">
+            <h1>WELCOME!</h1>
+            <p>CLICK BELOW TO GET STARTED</p>
+            <button id="continueButton">START</button>
+        </div>
+    </div>
+    <h1>NOT GEOMETRY DASH</h1>
+    <button id="restartButton">RESTART</button>
+
+    <script>
+      const restartButton = document.getElementById('restartButton');
+    
+      restartButton.addEventListener('click', () => {
+        location.reload();
+      });
+    </script>
+
+    <audio id="mySound" src="500476.mp3"></audio>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <script>
+    const splashScreen = document.getElementById('splash-screen');
+    const continueButton = document.getElementById('continueButton');
+    const mySound = document.getElementById('mySound');
+    const bodyChildren = document.body.children;
+
+    // Simulate content loading (replace with your actual loading logic)
+    window.addEventListener('DOMContentLoaded', () => { // fires when the initial HTML document is completely loaded and parsed, without requiring stylesheets, images, and subframes to finish loading. 
+        continueButton.addEventListener('click', () => {
+            splashScreen.style.display = 'none';
+            mySound.play();
+            // Show the rest of the content
+            for (let i = 0; i < bodyChildren.length; i++) {
+                if(bodyChildren[i].id !== 'splash-screen') {
+                    bodyChildren[i].style.display = 'block';
+                }
+            }
+        });
+    });
+
+    </script>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GROUND_Y = 350;
+
+        // Load images
+        const playerImage = new Image();
+        playerImage.src = 'player.png'; // Replace with your player image path
+
+        const obstacleImage = new Image();
+        obstacleImage.src = 'obstacle.png'; // Replace with your obstacle image path
+
+        const groundImage = new Image();
+        groundImage.src = 'ground.png'; // Replace with your ground image path
+
+        let imagesLoaded = 0;
+        const totalImages = 3;
+
+        function imageLoaded() {
+            imagesLoaded++;
+            if (imagesLoaded === totalImages) {
+                updateGame();
+            }
+        }
+
+        playerImage.onload = imageLoaded;
+        obstacleImage.onload = imageLoaded;
+        groundImage.onload = imageLoaded;
+
+
+
+        const player = {
+            x: 50,
+            y: GROUND_Y - 40,
+            width: 40,
+            height: 40,
+            jumping: false,
+            yVelocity: 0
+        };
+
+        let obstacles = [];
+        let gameSpeed = 5;
+        let score = 0;
+        let gameOver = false;
+
+        function createObstacle() {
+            const height = Math.random() * 100 + 20;
+            obstacles.push({
+                x: canvas.width,
+                y: GROUND_Y - height,
+                width: 40,
+                height: height
+            });
+        }
+
+        function drawPlayer() {
+            ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.drawImage(obstacleImage, obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function drawGround() {
+            ctx.drawImage(groundImage, 0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+        }
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawGround();
+
+            if (!gameOver) {
+                obstacles.forEach(obstacle => {
+                    obstacle.x -= gameSpeed;
+                });
+                obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+                drawObstacles();
+
+                if (player.jumping) {
+                    player.yVelocity += 0.8;
+                    player.y += player.yVelocity;
+                    if (player.y > GROUND_Y - player.height) {
+                        player.y = GROUND_Y - player.height;
+                        player.jumping = false;
+                    }
+                }
+                drawPlayer();
+
+                obstacles.forEach(obstacle => {
+                    if (player.x < obstacle.x + obstacle.width &&
+                        player.x + player.width > obstacle.x &&
+                        player.y < obstacle.y + obstacle.height &&
+                        player.y + player.height > obstacle.y) {
+                        gameOver = true;
+                    }
+                });
+
+                score++;
+		let highScore = localStorage.getItem('highScore') || 0; // Get or default to 0
+                if (score > highScore) { // Check if current score is higher
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore); // Save new high score
+                }
+                ctx.fillStyle = 'black';
+                ctx.font = '20px GD';
+                ctx.fillText(`SCORE: ${score}`, 10, 30);
+
+            }
+
+            if (gameOver) {
+		mySound.pause(); // Pause the music
+        	mySound.currentTime = 0; // Reset music to the beginning (optional)
+                ctx.fillStyle = 'black';
+                ctx.font = '40px GD';
+                ctx.fillText('GAME OVER', canvas.width / 2 - 100, canvas.height / 2);
+            }
+
+            requestAnimationFrame(updateGame);
+        }
+
+        setInterval(createObstacle, 2000);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !player.jumping) {
+                player.jumping = true;
+                player.yVelocity = -15;
+            }
+        });
+
+
+    </script>
+
+</body>
+</html>

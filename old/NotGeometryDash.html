@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Geometry Dash</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const GROUND_Y = 350; // New ground level
+
+        const player = {
+            x: 50,
+            y: GROUND_Y - 40, // Adjust initial y position
+            width: 40,
+            height: 40,
+            jumping: false,
+            yVelocity: 0
+        };
+
+        let obstacles = [];
+        let gameSpeed = 5;
+        let score = 0;
+        let gameOver = false;
+
+        function createObstacle() {
+            const height = Math.random() * 100 + 20;
+            obstacles.push({
+                x: canvas.width,
+                y: GROUND_Y - height, // Adjust obstacle y position
+                width: 40,
+                height: height
+            });
+        }
+
+        function drawPlayer() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+        }
+
+        function drawGround() {
+            ctx.fillStyle = 'green';
+            ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
+        }
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawGround(); // Draw the ground
+
+            if (!gameOver) {
+                // Move and draw obstacles
+                obstacles.forEach(obstacle => {
+                    obstacle.x -= gameSpeed;
+                });
+                obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+                drawObstacles();
+
+                // Player physics
+                if (player.jumping) {
+                    player.yVelocity += 0.8;
+                    player.y += player.yVelocity;
+                    if (player.y > GROUND_Y - player.height) {
+                        player.y = GROUND_Y - player.height;
+                        player.jumping = false;
+                    }
+                }
+                drawPlayer();
+
+                // Collision detection
+                obstacles.forEach(obstacle => {
+                    if (player.x < obstacle.x + obstacle.width &&
+                        player.x + player.width > obstacle.x &&
+                        player.y < obstacle.y + obstacle.height &&
+                        player.y + player.height > obstacle.y) {
+                        gameOver = true;
+                    }
+                });
+
+                // Score
+                score++;
+                ctx.fillStyle = 'black';
+                ctx.font = '20px Arial';
+                ctx.fillText(`Score: ${score}`, 10, 30);
+            }
+
+            if (gameOver) {
+                ctx.fillStyle = 'black';
+                ctx.font = '40px Arial';
+                ctx.fillText('Game Over', canvas.width/2 - 100, canvas.height/2);
+            }
+
+            requestAnimationFrame(updateGame);
+        }
+
+        // Spawn obstacles
+        setInterval(createObstacle, 2000);
+
+        // Jump control
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !player.jumping) {
+                player.jumping = true;
+                player.yVelocity = -15;
+            }
+        });
+
+        updateGame();
+    </script>
+</body>
+</html>
+
